@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        #timer, #close {
+            position: absolute;
+            top:15px;
+            font-size: 14px;
+            font-weight: 300;
+            color: white;
+            text-shadow: 2px 2px 3px black, 0 0 1em black;
+            font-family: sans-serif;
+        }
+        #timer {
+            left: 15px;
+            pointer-events: none;
+        }
+        #close {
+            right: 15px;
+            cursor: pointer;
+        }
+        #click {
+            width: 100%;
+            position: absolute;
+            height: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        #click[data-event="ad-resume"] {
+            opacity: 0.25;
+            z-index: 100;
+        }
+        #sound {
+            width: 30px;
+            height: 30px;
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            cursor: pointer;
+            background-color: rgba(0,0,0,0.5);
+            background-repeat: no-repeat;
+            background-size: cover;
+            border-radius: 5px;
+        }
+        #sound[data-event="ad-mute"] {
+            background-image: url("//cstatic.weborama.fr/js/external/vpaid/1.0/sound.png");
+        }
+        #sound[data-event="ad-unmute"] {
+            background-image: url("//cstatic.weborama.fr/js/external/vpaid/1.0/mute.png");
+        }
+    </style>
+</head>
+<body>
+    <div id="click" data-event="ad-click"></div>
+    <div id="timer"></div>
+    <div id="sound" data-event="ad-mute"></div>
+    <div id="close" data-event="ad-close">Закрыть</div>
+
+    <!--script type="text/javascript" src="//cstatic.weborama.fr/js/external/vpaid/1.0/interface.js"></script-->
+    <script type="text/javascript" src="./interface.js"></script>
+    
+    <script type="text/javascript">
+        var app = new Interface();
+        app.stateChange(function (state, data) {
+            switch (state) {
+                case "SetConfig":
+                    if(data.customParams["st"] !== 1) { // hide timer
+                        document.querySelector("#timer").style.display = "none";
+                    }
+                    if(data.customParams["ss"] !== 1) { // hide sound
+                        document.querySelector("#sound").style.display = "none";
+                    }
+                    if(data.customParams["ct"] !== 1) { // click denied
+                        document.querySelector("#click").style.cursor = "default";
+                    }
+                    if(data.customParams["co"] > 0) { // time for close button
+                        document.querySelector("#close").style.display = "none";
+                    }
+                    app.cssStyle("background:#000;");
+                    app.resizeVideo(0, 0, "100%", "100%");
+                    // Remove comment lines from string below to start muted. If player/validator enables sound, this won't work.
+                    //app.setAdVolume(0);
+                    break;
+                case "AdVolumeChange":
+                    document.querySelector("#sound").setAttribute("data-event", data > 0 ? "ad-mute" : "ad-unmute");
+                    break;
+                case "AdSkippableStateChange":
+                    document.querySelector("#close").addEventListener("click", app.close.bind(app));
+                    document.querySelector("#close").style.display = "block";
+                    break;
+                case "AdPaused":
+                    document.querySelector("#click").setAttribute("data-event", "ad-resume");
+                    break;
+                case "AdPlaying":
+                    document.querySelector("#click").setAttribute("data-event", "ad-click");
+                    break;
+            }
+        });
+        app.cuePoint([1, 2, 3], function(sec, data){
+            // this function will apply 3 times
+            // first args should be 1 or 2 or 3
+            // second args should be an Object with currentTime & totalTime
+        });
+        app.timeChange(function(data) {
+            // data - Object with currentTime & totalTime
+            document.querySelector("#timer").innerText = "Реклама | " + Math.round(data.totalTime - data.currentTime) + " сек.";
+        });
+        app.init();
+
+        document.querySelector("#click").addEventListener("click", function (event) {
+            if(document.querySelector("#click").getAttribute("data-event") === "ad-resume") {
+                app.resume();
+            } else if(app.customParams["ct"] !== 0) { // если клик не запрещён
+                app.click("default");
+            }
+        });
+        document.querySelector("#sound").addEventListener("click", function(){
+            var dataEvent = document.querySelector("#sound").getAttribute("data-event");
+            app.setAdVolume(dataEvent == "ad-mute" ? 0 : 1);
+        });
+    </script>
+</body>
+</html>

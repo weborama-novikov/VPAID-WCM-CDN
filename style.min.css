@@ -1,0 +1,31 @@
+div[id^="wb-"] {
+    position: absolute;
+    background: none !important;
+    top: 0;
+}
+div[id^="wb-"] video, div[id^="wb-"] iframe, div[id^="wb-"] .click {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+div[id^="wb-"] iframe, div[id^="wb-"] .click {
+    width: 100%;
+    height: 100%;
+}
+div[id^="wb-"] iframe {
+    border: 0;
+	z-index: 1000;
+}
+div[id^="wb-"].inpage iframe {
+    position: absolute;
+    top: -100px;
+    left: -100px;
+    width: calc(100% + 200px);
+    height: calc(100% + 200px);
+}
+div[id^="wb-"] .click {
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
